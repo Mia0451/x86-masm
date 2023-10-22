@@ -1,0 +1,381 @@
+6.10.1 Short Answer
+
+5. What will be the value of EBX after the following instructions execute?
+BFAFF69F (hexadecimal)
+
+7. In the following instruction sequence, show the resulting value of AL where indicated, in binary:
+mov al,01101111b
+and al,00101101b 	; a. 00101101
+mov al,6Dh
+and al,4Ah 		; b. 01001000
+mov al,00001111b
+or al,61h 		; c. 01101111
+mov al,94h
+xor al,37h 		; d. 10100011
+
+8. In the following instruction sequence, show the resulting value of AL where indicated, in hexadecimal:
+mov al,7Ah
+not al 			; a. 85 (hexadecimal)
+mov al,3Dh
+and al,74h 		; b. 34 (hexadecimal)
+mov al,9Bh
+or al,35h 		; c. 0BF (hexadecimal)
+mov al,72h
+xor al,0DCh 		; d. 0AE (hexadecimal)
+
+9. In the following instruction sequence, show the values of the Carry, Zero, and Sign flags where indicated:
+mov al,00001111b
+test al,00000010b 	; a. CF=0 ZF=0 SF=0
+mov al,00000110b
+cmp al,00000101b 	; b. CF=0 ZF=0 SF=0
+mov al,00000101b
+cmp al,00000111b 	; c. CF=1 ZF=0 SF=1
+
+
+12. What will be the final value in EDX after this code executes?
+1 (because the jl will take effect)
+
+
+14. What will be the final value in EDX after this code executes?
+0 (because the jl will not take effect)
+
+16. (True/False): The following code will jump to the label named Target
+True
+
+19. What will be the value of RBX after the following instructions execute?
+80808080h (because they default to 0 extended)
+
+
+
+
+6.11.2 Exercise Descriptions 
+
+1. Filling an Array
+
+; I tested in my Visual Studio 2022, works as expected, both print array and
+; check in the momory-1 in debugger shows the correct result
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+arr DWORD 20 DUP(0)
+
+.code
+main PROC
+	mov esi, OFFSET arr
+	mov ecx, LENGTHOF arr
+
+	mov ebx, 1
+	mov eax, 8
+	call BetterRandomRange
+	call PrintArray
+
+	mov ebx, 10
+	mov eax, 80
+	call BetterRandomRange
+	call PrintArray
+
+	invoke 	ExitProcess,0
+main ENDP
+
+; generates integers between j and k (inclusive, j<=k)
+; j in EBX and k in EAX
+; return value in eax
+RandomRangeOnce PROC
+	push ebx
+
+	sub eax, ebx
+	call RandomRange
+	add eax, ebx
+
+	pop ebx
+	ret
+RandomRangeOnce ENDP
+
+; generates integers between j and k (inclusive, j<=k)
+; The offset of the doublewords array is passed in ESI
+; j in EBX and k in EAX
+; N in ECX
+BetterRandomRange PROC
+	push eax
+	push ebx
+	push ecx
+	push edx
+	push esi
+
+	mov edx, eax
+L1:
+	mov eax, edx
+	call RandomRangeOnce
+	mov [esi], eax
+	add esi, TYPE DWORD
+	loop L1
+
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	ret
+BetterRandomRange ENDP
+
+; print dword array
+; The offset of the doublewords array is passed in ESI
+; N in ECX
+PrintArray PROC
+	push eax
+	push ecx
+	push esi
+
+L1:
+	mov eax, [esi]
+	call WriteInt
+	call Crlf
+	add esi, TYPE DWORD
+	loop L1
+
+	pop esi
+	pop ecx
+	pop eax
+	ret
+PrintArray ENDP
+
+end main
+
+
+2. Summing Array Elements in a Range
+; I tested in my Visual Studio 2022, works as expected, I used code in question 1
+; to generate the dword array and print the array
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+arr DWORD 20 DUP(0)
+
+.code
+main PROC
+	mov esi, OFFSET arr
+	mov ecx, LENGTHOF arr
+
+	mov ebx, 1
+	mov eax, 8
+	call BetterRandomRange
+	call PrintArray
+
+	call Crlf
+	call Crlf
+	mov ebx, 4
+	mov edx, 6
+	call SumArray
+	call WriteInt
+
+	invoke 	ExitProcess,0
+main ENDP
+
+; The offset of the signed doublewords array is passed in ESI
+; The number of elements is in ECX
+; j in EBX and k in EDX (j <= k)
+; return result in EAX
+SumArray PROC
+	push ebx
+	push ecx
+	push edx
+	push esi
+
+	mov eax, 0						; 
+L1: 
+	cmp SDWORD PTR [esi], ebx		; compare value to j
+	jl lp
+	cmp SDWORD PTR [esi], edx		; compare value to k
+	jg lp
+	add eax, SDWORD PTR [esi]		; add
+lp:
+	add esi, TYPE SDWORD
+	loop L1
+
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	ret
+SumArray ENDP
+
+
+; generates integers between j and k (inclusive, j<=k)
+; j in EBX and k in EAX
+; return value in eax
+RandomRangeOnce PROC
+	push ebx
+
+	sub eax, ebx
+	call RandomRange
+	add eax, ebx
+
+	pop ebx
+	ret
+RandomRangeOnce ENDP
+
+; generates integers between j and k (inclusive, j<=k)
+; The offset of the doublewords array is passed in ESI
+; j in EBX and k in EAX
+; N in ECX
+BetterRandomRange PROC
+	push eax
+	push ebx
+	push ecx
+	push edx
+	push esi
+
+	mov edx, eax
+L1:
+	mov eax, edx
+	call RandomRangeOnce
+	mov [esi], eax
+	add esi, TYPE DWORD
+	loop L1
+
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	ret
+BetterRandomRange ENDP
+
+
+; print dword array
+; The offset of the doublewords array is passed in ESI
+; N in ECX
+PrintArray PROC
+	push eax
+	push ecx
+	push esi
+
+L1:
+	mov eax, [esi]
+	call WriteInt
+	call Crlf
+	add esi, TYPE DWORD
+	loop L1
+
+	pop esi
+	pop ecx
+	pop eax
+	ret
+PrintArray ENDP
+
+end main
+
+
+
+4. College Registration
+
+; I tested in my Visual Studio 2022, works as expected
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+TRUE = 1
+FALSE = 0
+gradeAverage DWORD ?
+credits DWORD ?
+OkToRegister BYTE ?
+InvalidInputMsg BYTE "Invalid input",13,10,0
+inputGradeMsg BYTE "Please input your grade:",13,10,0
+inputCreditMsg BYTE "Please input your credit:",13,10,0
+canRegister BYTE "The student can register",13,10,0
+canNotRegister BYTE "The student can NOT register",13,10,0
+
+.code
+main PROC
+	mov edx, offset inputGradeMsg
+	call WriteString
+
+	call Getnext			; get grade in eax
+	mov gradeAverage, eax
+
+
+	mov edx, offset inputCreditMsg
+	call WriteString
+
+	call Getnext			; get credit in eax
+	mov credits, eax
+
+	mov byte ptr OkToRegister, FALSE
+
+
+	cmp eax, 1			; check credit
+	jbe L5
+	cmp eax, 30
+	ja L5
+	
+
+	
+	cmp word ptr gradeAverage,350
+	jbe L1
+	mov byte ptr OkToRegister,TRUE
+	jmp L3
+L1:
+	cmp word ptr gradeAverage,250
+	jbe L2
+	cmp word ptr credits,16
+	ja L2
+	mov byte ptr OkToRegister,TRUE
+	jmp L3
+L2:
+	cmp word ptr credits,12
+	ja L3
+	mov byte ptr OkToRegister,TRUE
+
+
+L3:
+	and OkToRegister, TRUE
+	jz L4
+	mov edx, offset canRegister
+	call WriteString
+	jmp L6
+L4:
+	mov edx, offset canNotRegister
+	call WriteString
+	jmp L6
+
+L5: 
+	mov edx, offset InvalidInputMsg
+	call WriteString
+	
+L6:
+	invoke 	ExitProcess,0
+main ENDP
+
+; get next integer from user
+; Returns: EAX contains the integer
+Getnext PROC
+	call ReadInt ; input from keyboard
+	ret
+Getnext ENDP
+
+
+DisplayMsg PROC
+; Displays an message, offset of the message is in edx
+	call WriteString
+	ret
+DisplayMsg ENDP
+
+
+end main
+

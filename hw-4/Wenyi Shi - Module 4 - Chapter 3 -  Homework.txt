@@ -1,0 +1,187 @@
+1. Integer Expression Calculation
+
+
+; AddTwo.asm - adds two 32-bit integers.
+; Chapter 3 example
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.code
+main proc
+	mov	eax,5		; A
+	mov 	ebx,6		; B
+	mov 	ecx,7		; C
+	mov 	edx,8		; D
+	add	eax,ebx		; A+B and assign back to eax
+	add 	ecx,edx		; C+D and assign back to ecx
+	sub 	eax,ecx		; (eax-ecx) and assign back to eax
+	call 	WriteInt
+	invoke 	ExitProcess,0
+main endp
+end main
+
+
+; I ran the MASM code using Visual Studio 2022, the final result is -4, as expected
+
+
+
+
+
+
+
+
+
+2. Symbolic Integer Constants
+
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+SUNDAY		= 0
+MONDAY		= 1
+TUESDAY		= 2
+WEDNESDAY	= 3
+THURSDAY	= 4
+FRIDAY		= 5
+SATURDAY	= 6
+
+.data
+
+daysOfWeek DWORD SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
+
+.code
+main proc
+	MOV eax, [daysOfWeek+24]
+	call WriteDec
+	MOV eax, [daysOfWeek+20]
+	call WriteDec
+	MOV eax, [daysOfWeek+16]
+	call WriteDec
+	MOV eax, [daysOfWeek+12]
+	call WriteDec
+	MOV eax, [daysOfWeek+8]
+	call WriteDec
+	MOV eax, [daysOfWeek+4]
+	call WriteDec
+	MOV eax, [daysOfWeek]
+	call WriteDec
+	invoke 	ExitProcess,0
+main endp
+end main
+
+; I ran the MASM code using Visual Studio 2022, the final result is "6543210", as expected
+
+
+
+
+
+3. Data Definitions
+
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+
+a BYTE 'Q'
+b BYTE 34h
+d SBYTE -9
+e SBYTE 56h
+f WORD	'ty'
+g WORD 65535
+h SWORD	-32768
+i SWORD 32767
+j SWORD 8945h
+k DWORD	67
+l DWORD '678y'
+m SDWORD 893
+n SDWORD -98765
+o FWORD 4.67
+p QWORD 8937345277
+r TBYTE 8399742492474
+s REAL4 83.46363
+t REAL8 7284267462.74622
+u REAL10 8384784.335
+
+.code
+main proc
+	mov al, [a]
+	call WriteChar
+	mov al, [b]
+	call WriteChar
+	invoke 	ExitProcess,0
+main endp
+end main
+
+
+; I ran the MASM code using Visual Studio 2022, the final result is "Q4", as expected
+
+
+
+
+
+
+
+4. Symbolic Text Constants
+
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+SUNDAY		EQU <"Sunday",0>
+MONDAY		EQU <"Monday",0>
+TUESDAY		EQU <"Tuesday",0>
+WEDNESDAY	EQU <"Wednesday",0>
+THURSDAY	EQU <"Thursday",0>
+FRIDAY		EQU <"Friday",0>
+SATURDAY	EQU <"Saturday",0>
+
+.data
+
+SUN BYTE SUNDAY
+MON BYTE MONDAY
+TUE BYTE TUESDAY
+WED BYTE WEDNESDAY
+THUR BYTE THURSDAY
+FRI BYTE FRIDAY
+SAT BYTE SATURDAY
+
+.code
+main proc
+	mov edx, OFFSET SUN
+	call WriteString
+	mov edx, OFFSET MON
+	call WriteString
+	mov edx, OFFSET TUE
+	call WriteString
+	mov edx, OFFSET WED
+	call WriteString
+	mov edx, OFFSET THUR
+	call WriteString
+	mov edx, OFFSET FRI
+	call WriteString
+	mov edx, OFFSET SAT
+	call WriteString
+	invoke 	ExitProcess,0
+main endp
+end main
+
+
+; I ran the MASM code using Visual Studio 2022, the final result is "SundayMondayTuesdayWednesdayThursdayFridaySaturday", as expected

@@ -1,0 +1,250 @@
+4.9.2 
+
+prob 13, What will be the value of EAX after each of the following instructions execute?
+mov eax,TYPE myBytes 		; a. 1(decimal) since single variable of myBytes is 1 byte size
+mov eax,LENGTHOF myBytes 	; b. 4(decimal) since there are 4 elements in the myBytes array
+mov eax,SIZEOF myBytes 		; c. 4(decimal) since 4 * 1 = 4
+mov eax,TYPE myWords 		; d. 2(decimal) since single variable of myWords is 2 bytes size
+mov eax,LENGTHOF myWords 	; e. 4(decimal) since there are 4 elements in the myWords array
+mov eax,SIZEOF myWords 		; f. 8(decimal) since 4 * 2 = 8
+mov eax,SIZEOF myString 	; g. 5(decimal) since there are 5 characters in myString
+
+
+
+4.10
+
+1. Converting from Big Endian to Little Endian (I used Visual Studio to test my code)
+
+; Following code I only use mov instruction (also I use Irvine WriteHex to print out the result)
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+bigEndian BYTE 12h,34h,56h,78h
+littleEndian DWORD ?
+
+.code
+main proc
+	mov al, [bigEndian]
+	mov BYTE PTR [littleEndian+3], al
+	mov al, [bigEndian+1]
+	mov BYTE PTR [littleEndian+2], al
+	mov al, [bigEndian+2]
+	mov BYTE PTR [littleEndian+1], al
+	mov al, [bigEndian+3]
+	mov BYTE PTR [littleEndian], al
+	mov eax, littleEndian
+	call WriteHex
+	invoke 	ExitProcess,0
+main endp
+end main
+
+
+
+
+
+2. Exchanging Pairs of Array Values (I tested following code in Visual Studio, works as expected)
+
+
+; Following code can ONLY handle even number of elements, I also print the elements of the array at last
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+myArray DWORD 12h,34h,56h,78h,0aah,0bbh,0cch,0ddh,0eeh,0ffh
+
+.code
+main proc
+	
+	mov ecx, LENGTHOF myArray				; number of elements in myArray
+	add ecx, 1
+	jmp zeroCheck							; in case array has 0 number of elements
+
+zeroSafe:
+	mov ecx, LENGTHOF myArray
+	add ecx, 1
+	mov esi, 0
+	jmp realLoop
+
+swap:
+	mov eax, myArray[esi*TYPE myArray]
+	inc esi
+	mov ebx, myArray[esi*TYPE myArray]
+	mov [myArray + esi*TYPE myArray], eax
+	dec esi
+	mov [myArray + esi*TYPE myArray], ebx
+	add esi, 2
+	dec ecx
+realLoop:	
+	loop swap
+	jmp print
+
+zeroCheck:	
+	loop zeroSafe
+
+
+
+print:
+	mov ecx, LENGTHOF myArray				; print the array
+	add ecx, 1
+	jmp zeroCheck2
+zeroSafe2:	
+	mov ecx, LENGTHOF myArray				
+	mov esi, 0
+pt:	mov eax, myArray[esi*TYPE myArray]
+	call WriteHex
+	inc esi
+	loop pt
+	jmp qt
+zeroCheck2:	
+	loop zeroSafe2
+
+qt:
+	invoke 	ExitProcess,0
+main endp
+end main
+
+
+
+
+3. Summing the Gaps between Array Values (I tested code using Visual Studio, works as expected)
+
+
+; In following code, I also handle situations when array has 0 elements or 1 elements.
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+myArray DWORD 0d,2d,5d,9d,10d
+
+.code
+main proc
+	mov edx, 0									; final result
+	mov ecx, LENGTHOF myArray					; number of elements in myArray
+	add ecx, 1
+	jmp zeroCheck								; in case array has 0 number of elements
+zeroSafe:
+	mov ecx, LENGTHOF myArray
+	jmp realLoop
+gapSum:
+	mov esi, ecx
+	mov eax, myArray[esi*TYPE myArray]
+	sub esi, 1
+	mov ebx, myArray[esi*TYPE myArray]
+	sub eax, ebx
+	add edx, eax
+realLoop:
+	loop gapSum
+	jmp print
+zeroCheck:	
+	loop zeroSafe
+
+print:
+	mov eax, edx
+	call WriteInt
+
+	invoke 	ExitProcess,0
+main endp
+end main
+
+
+
+
+
+4. Copying a Word Array to a DoubleWord array
+
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+myArray WORD 12h,34h,56h,78h,9ah,0bch,0deh,0f0h
+myDes DWORD 4 DUP(?)
+
+.code
+main proc
+	
+	mov ecx, LENGTHOF myArray				; number of elements in myArray
+	add ecx, 1
+	jmp zeroCheck							; in case array has 0 number of elements
+
+zeroSafe:
+
+	mov ecx, LENGTHOF myArray				
+	mov esi, 0
+lp:	mov ax, myArray[esi*TYPE myArray]
+	mov WORD PTR myDes[esi*TYPE myArray], ax
+	inc esi
+	loop lp
+	jmp print
+
+zeroCheck:	
+	loop zeroSafe
+
+
+
+print:
+	mov eax, myDes
+	call WriteHex
+	mov eax, myDes[4]
+	call WriteHex
+
+	invoke 	ExitProcess,0
+main endp
+end main
+
+
+
+
+5. Fibonacci Numbers (I tested using Visual Studio, works as expected)
+
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+myCount DWORD 7
+
+.code
+main proc
+	mov eax, 0				; final result
+	mov ebx, 1				; first element
+	mov edx, 1				; second element
+	mov ecx, myCount
+lp:
+	add eax, ebx
+	mov ebp, edx
+	add edx, ebx
+	mov ebx, ebp
+	loop lp
+
+print:
+
+	call WriteInt
+	invoke 	ExitProcess,0
+main endp
+end main
+

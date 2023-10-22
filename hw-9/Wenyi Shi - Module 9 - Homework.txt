@@ -1,0 +1,364 @@
+8.11 Programming Exercises
+
+1. FindLargest Procedure
+; I tested following code in Visual Studio, works as expected
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+FindLargest PROTO, ptrArray: PTR SDWORD, szArray: DWORD
+
+.data
+arr SDWORD 3h,4h,1h,6h,5h,-9h,7h
+arrLen DWORD 0
+
+.code
+main PROC
+	mov arrLen, LENGTHOF arr
+	INVOKE FindLargest, ADDR arr, arrLen
+
+	call WriteHex
+
+	invoke 	ExitProcess,0
+main ENDP
+
+FindLargest PROC USES esi ecx,
+	ptrArray: PTR SDWORD,
+	szArray: DWORD
+	pushfd
+
+	mov esi, ptrArray
+	mov ecx, szArray
+	mov eax, [esi]			; initial value with first element is ok
+L1:
+	cmp eax, [esi]
+	jg L2				; if left > right, just go to next
+	mov eax, [esi]
+L2:
+	add esi, 4
+	loop L1
+	
+	popfd
+	ret
+FindLargest ENDP
+
+end main
+
+
+
+
+2. Chess Board
+
+; I tested using Visual Studio, the result is gray and blue alternating
+; also without calling Gotoxy, the result is still same, gray and blue alternating
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+SetRowAlternate PROTO, color: BYTE, row: BYTE
+
+.data
+startColor BYTE 0
+rowData BYTE 0
+
+.code
+main PROC
+
+	mov bh, 0
+	mov ecx, 8
+L1:
+	INVOKE SetRowAlternate, startColor, rowData
+	mov al, startColor
+	xor al, 1
+	mov startColor, al
+	call Crlf
+
+	inc bh
+	mov rowData, bh
+	loop L1
+
+	invoke 	ExitProcess,0
+main ENDP
+
+SetRowAlternate PROC USES ecx eax edx,
+	color: BYTE,
+	row: BYTE
+	pushfd	
+
+	mov ecx, 8
+	mov bl, color
+	mov dh, row						; always same row
+	mov dl, 0						; start from column zero
+L1:
+	xor bl, 1
+	jz zero
+	mov eax, white + (blue * 16) ; white on blue call SetTextColor 
+	jmp write	; otherwise is 1
+zero:
+	mov eax, white + (gray * 16) ; white on blue call SetTextColor
+write:
+	call SetTextColor
+	push eax
+
+	mov al, 'a'
+	call WriteChar
+
+	pop eax
+	inc dl
+	loop L1
+	
+	popfd
+	ret
+SetRowAlternate ENDP
+
+end main
+
+
+
+
+4. FindThrees Procedure
+; Tested using visual studio, works as expected.
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+FindThrees PROTO, ptrArray: PTR DWORD, szArray:DWORD
+
+.data
+msg1 BYTE "Has consecutive 3s.",0
+msg2 BYTE "Does not have consecutive 3s.",0
+arrOne DWORD 1,2,4,3,2,3,3,3,0,9,8,3,4
+arrTwo DWORD 3,3,4,5,7,33,5,6,3,2,1
+
+.code
+main PROC
+	call Clrscr
+	INVOKE FindThrees, OFFSET arrOne, LENGTHOF arrOne
+
+	cmp eax, 1
+	je has
+	mov edx, OFFSET msg2
+	jmp output
+has:
+	mov edx, OFFSET msg1
+output:
+	call WriteString
+	call Crlf
+
+
+	INVOKE FindThrees, OFFSET arrTwo, LENGTHOF arrTwo
+
+	cmp eax, 1
+	je has2
+	mov edx, OFFSET msg2
+	jmp output2
+has2:
+	mov edx, OFFSET msg1
+output2:
+	call WriteString
+	call Crlf
+
+
+main ENDP
+
+FindThrees PROC USES esi ecx,
+	ptrArray: PTR DWORD,
+	szArray: DWORD
+
+	mov esi, ptrArray
+	mov edx, szArray
+	mov ebx, 0
+	mov ecx, 0
+L1:
+	cmp ebx, edx
+	jz bad
+	mov eax, [esi]
+	cmp eax, 3
+	jz firstPair
+	mov ecx, 0
+	jmp next
+firstPair:
+	add ecx, 1
+	cmp ecx, 3
+	jz good
+next:
+	add ebx, 1
+	add esi, TYPE DWORD
+	jmp L1
+good:
+	mov eax, 1
+	jmp return
+bad:
+	mov eax, 0
+	return: ret
+	FindThrees ENDP
+
+END main
+
+
+5. DifferentInputs Procedure
+; Tested in Visual Studio, works as expected
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+DifferentInputs PROTO, first: SDWORD, second: SDWORD, third: SDWORD
+
+.data
+aw SDWORD 1
+bw SDWORD 2
+cw SDWORD 3
+
+.code
+main PROC
+	INVOKE DifferentInputs, aw, bw, cw
+	call WriteInt
+
+main endp
+
+DifferentInputs PROC first: SDWORD, second: SDWORD, third: SDWORD
+	pushfd
+
+	mov eax, first
+	mov ebx, second
+	mov edx, third
+	cmp eax, ebx
+	je earlyDone
+	cmp eax, edx
+	je earlyDone
+	cmp ebx, edx
+	je earlyDone
+	mov eax, 1
+	jmp done
+earlyDone:
+	mov eax, 0
+done:
+	popfd
+	ret
+DifferentInputs endp
+
+end main
+
+
+
+
+6. Exchanging Integers
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+Swap PROTO, pValX:PTR DWORD, start: DWORD
+
+.data
+Array DWORD 1,2,3,4,5,6,7,8
+startData DWORD 0
+
+.code
+main PROC
+	mov esi, OFFSET array
+	mov ecx, LENGTHOF array - 1			; only one less swap
+	mov eax, 0
+
+L1:
+	INVOKE Swap, ADDR [Array], startData
+	inc eax
+	mov startData, eax
+	loop L1
+
+	exit
+main ENDP
+
+;-------------------------------------------------------
+Swap PROC USES eax esi edi,
+pValX:PTR DWORD, ; pointer to first integer
+start: DWORD ; index of first element
+;
+; Copied from book 8.4.6
+; Exchange the values of two 32-bit integers
+; Returns: nothing
+;-------------------------------------------------------
+	mov eax, start
+	mov bl, 4
+	mul bl
+	mov esi, pValX ; get pointers
+	mov edi, pValX
+	add esi, eax
+	add edi, eax
+	mov eax, [esi] ; get first integer
+	xchg eax, [edi] ; exchange with second
+	mov [esi], eax ; replace first integer
+	ret ; PROC generates RET 8 here
+Swap ENDP
+
+END main
+
+
+
+
+
+7. Greatest Common Divisor
+; Use stack to pass the arguments, tested in Visual Studio, works as expected
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+str1 BYTE "Largest common divisor is: ",0
+
+.code
+main PROC
+	push 26
+	push 13
+	call GCD
+	mov edx,OFFSET str1
+	call WriteString
+	call WriteDec
+
+	exit 
+main ENDP
+
+GCD PROC
+	push ebp
+	mov ebp, esp
+	mov eax, [ebp+12]
+	mov ebx, [ebp+8]
+	mov edx, 0
+	div ebx
+	cmp edx, 0
+	ja L1
+	mov eax, ebx
+	jmp L2
+L1:
+	mov eax, ebx
+	mov ebx, edx
+	call GCD
+L2:
+	pop ebp
+	ret 8
+GCD ENDP
+
+END main

@@ -1,0 +1,116 @@
+Chapter 1.7
+
+
+
+3. sum of each pair of binary integers
+
+This problem never state they are signed integers or unsigned integer,
+nor stated whether we are allow to use more than 8 bits...
+I will treat them as unsigned, and allow more than 8 bits for the result
+
+a, 10101111 + 11011011 = 110001010
+b, 10010111 + 11111111 = 110010110
+c, 01110101 + 10101100 = 100100001
+
+
+
+6. What is the minimum number of binary bits needed to represent each of the following
+unsigned decimal integers?
+(1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536)
+
+a. 4095, minimum 12 bits
+b. 65534, minimum 16 bits
+c. 42319, minimum 16 bits
+
+
+
+
+8. What is the binary representation of the following hexadecimal numbers?
+
+a, 0126F9D4 => 0000 0001 0010 0110 1111 1001 1101 0100
+b, 6ACDFA95 => 0110 1010 1100 1101 1111 1010 1001 0101
+c, F69BDC2A => 1111 0110 1001 1011 1101 1100 0010 1010
+
+
+
+
+9. What is the unsigned decimal representation of each of the following hexadecimal integers?
+
+a, 3A => 3*16+10 = 58
+b, 1BF => 1*16*16 + 11*16 + 15 = 447
+c, 1001 => 1*16*16*16 + 1 = 4097
+
+
+
+
+11. What is the 16-bit hexadecimal representation of each of the following signed decimal integers?
+a. -24
+We first calculate the positive number 24 signed 16-bits binary representation
+24 => 0000 0000 0001 1000
+Convert to -24, we got
+=> 1111 1111 1110 0111 + 1 => 1111 1111 1110 1000
+Now convert binary representation to hexadecimal representation
+=> FFE8
+
+b. -331
+We first calculate the positive number 331 signed 16-bits binary representation
+331 => 0000 0001 0100 1011
+Convert to -331, we got
+=> 1111 1110 1011 0100 + 1 => 1111 1110 1011 0101
+Now convert binary representation to hexadecimal representation
+=> FEB5
+
+
+
+
+
+14. The following 16-bit hexadecimal numbers represent signed integers. Convert each to decimal.
+
+a. 4CD2 => 0100 1100 1101 0010 (this is a positive number)
+    => 4*16*16*16+12*16*16+13*16+2 = 19666
+
+b. 8230 => 1000 0010 0011 0000 (this is a negative number)
+    => -2^15 + 2^9 + 2^5 + 2^4 = -32208
+
+
+
+
+17. What is the 8-bit binary (two’s-complement) representation of each of the following signed
+decimal integers?
+a. -5
+We first calculate the positive number 5 8-bis binary representation
+5 => 0000 0101
+Now convert to -5 binary representation
+=> 1111 1010 + 1 
+=> 1111 1011
+
+b. -42
+We first calculate the positive number 42 8-bits binary representation
+42 => 0010 1010
+Now convert to -42 binary representation
+=> 1101 0101 + 1
+=> 1101 0110
+
+c. -16
+We first calculate the positive number 16 8-bits binary representation
+16 => 0001 0000
+Now convert to -16 binary representation
+=> 1110 1111 + 1
+=> 1111 0000
+
+
+
+
+19. What is the sum of each pair of hexadecimal integers?
+a. 6B4 + 3FE = AB2
+b. A49 + 6BD = 1106
+
+
+
+
+20. What is the sum of each pair of hexadecimal integers?
+a. 7C4 + 3BE = A82
+b. B69 + 7AD = 1316
+
+
+

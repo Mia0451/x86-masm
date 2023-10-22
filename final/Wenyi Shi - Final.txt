@@ -1,0 +1,234 @@
+1- (20 points) Write a general-purpose program that correct an extra 
+character in a string.
+
+; I Tested in Visual Studio, works as expected
+
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+str1 BYTE "Excellent time too listen to music",0		
+target DWORD 16			; in this case we remove the 16th letter
+
+.code
+main proc
+	
+	mov esi, offset str1
+	add esi, target
+	mov edi, esi
+	inc edi
+
+	mov ecx, lengthof str1
+	sub ecx, target
+
+L1:
+	mov al, [edi]
+	mov [esi], al
+	inc edi
+	inc esi
+	loop L1
+
+	mov edx, OFFSET str1
+	call WriteString
+	
+main endp
+end main
+
+
+
+
+
+
+
+2-(20 points) Write a general-purpose program  that concatenates 
+(concatenate means adding to the end) a source string to the end 
+of a target string
+
+
+; I tested in Visual Studio, works as expected, I wrote a procedure
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+Str_concat proto,
+	target:PTR BYTE,
+	source:PTR BYTE
+
+.data
+targetStr byte "Kamran",20 DUP(0)
+sourceStr byte "Eftekhari",0
+
+.code
+main proc
+	INVOKE Str_concat, ADDR targetStr, ADDR sourceStr
+	mov edx, offset targetStr
+	call WriteString
+	call Crlf
+	exit
+main endp
+
+Str_concat proc uses eax ebx ecx esi edi,
+	target:PTR BYTE,
+	source:PTR BYTE
+
+	; try to reach to the *meaningful* end of the target string
+	mov esi, target
+L1:
+	mov bl, [esi]
+	cmp bl, 0
+	je foundEnd
+	inc esi
+	jmp L1
+foundEnd:
+	
+	; now we will loop source string to copy each letter to target
+
+	mov edi, source
+L2:
+	mov bl, [edi]
+	cmp bl, 0
+	je done
+
+	mov [esi], bl
+
+	inc esi
+	inc edi
+	jmp L2
+
+done:
+	ret
+Str_concat endp
+
+end main
+
+
+
+
+
+
+
+
+3- (20 points) Write an assembly for: Do not change the order of the relational expressions.
+
+; I tested in Visual Studio, works as expected
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+a SDWORD 2
+b SDWORD 1
+
+.code
+main PROC
+	
+	mov eax, a
+	cmp eax, 15
+	jg ELSEBRANCH			; if a > 15, go to else branch
+	cmp eax, 2
+	jl ELSEBRANCH			; if a < 2, go to else branch
+
+	
+	mov ebx, b
+	cmp ebx, 2
+	jle IFBRANCH			; if b <= 2, go to if branch
+
+	cmp ebx, 14
+	jge IFBRANCH			; if 'if' is true, go to if branch
+
+
+
+ELSEBRANCH:
+	mov eax, b
+	sub eax, 2			; b - 2
+	mov a, eax			; a = eax = b-2
+
+	mov eax, b
+	sub eax, 5
+	mov b, eax
+	jmp DONE
+
+IFBRANCH:
+	mov eax, a
+	sub eax, 4			; a - 4
+	mov b, eax
+
+	sub eax, 2
+	mov a, eax
+
+DONE:					; print to verify
+	mov eax, a
+	call WriteInt
+	call Crlf
+	mov eax, b
+	call WriteInt
+
+main ENDP
+END main
+
+
+
+
+
+
+
+
+4- (10 points) Write a general-purpose program with a loop and indexed 
+addressing that calculates sum of  the values of elements of a DWORD
+ array that are located at multiple of 4 location.
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+myArray DWORD 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19
+
+.code
+main proc
+
+	mov ecx, LENGTHOF myArray		; number of elements in myArray
+	cmp ecx, 0
+	je qt					; if there is no element, just quit
+
+	mov edx, 0				; save the result
+
+	mov esi, offset myArray
+	mov eax, 0				; counter for 4
+
+L1:
+	inc eax
+	
+	cmp eax, 4
+	jl notyet
+
+	add edx, [esi]
+	mov eax, 0
+
+notyet:
+	add esi, 4
+	loop L1
+
+						; print the result
+	mov eax, edx
+	call WriteInt
+
+qt:
+main endp
+end main

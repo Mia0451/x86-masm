@@ -1,0 +1,170 @@
+Prob 1: (20 points) reverse 8 bytes number
+
+; I didn't create sub procedure
+; I created extra data location to save the temporary result
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+.data
+lowerByte DWORD ?
+higherByte DWORD ?
+temp DWORD ?					; a temporry space
+
+.code
+main proc
+	mov eax, 12131415h
+	mov edx, 12345678h
+
+	; I first moe both eax and edx to data segment
+	mov lowerByte, eax
+	mov higherByte, edx
+
+	mov ecx, TYPE lowerByte
+	mov ebx, 3
+	mov esi, 0
+lp1:
+	mov al, BYTE PTR lowerByte[esi]
+	mov BYTE PTR [temp+ebx], al
+	inc esi
+	dec ebx
+	loop lp1
+	
+	mov eax, temp			; save the result, be the new higher byte
+
+	; now reverse the other DWORD
+
+	mov ecx, TYPE higherByte
+	mov ebx, 3
+	mov esi, 0
+lp2:
+	mov al, BYTE PTR higherByte[esi]
+	mov BYTE PTR [temp+ebx], al
+	inc esi
+	dec ebx
+	loop lp2
+
+	; now we have both reversed, copy to the correct register
+	mov edx, eax
+	mov eax, temp
+
+
+main endp
+end main
+
+
+
+
+
+
+Prob 2: (10 points) Write a general-purpose program that is able to add two 8 bytes length numbers. Numbers are saved in EBX: EAX and EDX: ECX
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+
+.code
+main proc
+	; EBX: EAX
+	mov ebx, 12345678h
+	mov eax, 98765432h
+	; EDX: ECX
+	mov edx, 12345678h
+	mov ecx, 98765432h
+
+	add ecx, eax			; add lower 4 bytes to ecx
+	setc al
+
+	add edx, ebx			; add higher 4 bytes to edx
+
+	; Now we handle carry
+	movzx eax, al			; extended with 0
+	add edx, eax
+
+	; Now <edx : ecx> has the result
+
+main endp
+end main
+
+
+
+
+
+
+Prob 3: (20 points) Write a general-purpose program with loop and indexed addressing
+that adds 12h to 0th, 3rd , 7th , 11th ,15th ,19th , … elements of a DWORD array.
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+myArray DWORD 12h, 13h, 14h,15h, 16h, 17h, 18h, 19h, 1ah, 1bh, 1ch, 1dh, 1eh, 1fh
+
+.code
+main proc
+
+	mov ecx, LENGTHOF myArray		; number of elements in myArray
+	add ecx, 1
+	jmp zeroCheck				; in case array has 0 number of elements
+
+zeroSafe:
+	; We first added the 0th element
+	mov esi, offset myArray
+	mov eax, [esi]
+	add eax, 12h
+	mov [esi], eax				; add back to the 0th element
+
+	; Now concern with 3rd, 7th, 11th, 15th, 19th element
+	; we can find they are separated by 16 bytes in between
+	mov ecx, lengthof myArray / 4
+	add ecx, 1
+	jmp zeroCheck2
+
+zeroSafe2:
+	mov ecx, lengthof myArray / 4
+	add esi, 12				; point to the 3rd element
+L1:
+	mov eax, [esi]
+	add eax, 12h
+	mov [esi], eax
+	add esi, 16				; 16 byte every iteration
+	loop L1
+
+	jmp qt
+
+zeroCheck:	
+	loop zeroSafe
+	jmp qt
+zeroCheck2:	
+	loop zeroSafe2
+	jmp qt
+
+qt:
+
+main endp
+end main
+
+
+
+
+
+
+Prob 4: (20 points) Use the following variable definitions:
+
+mov edx, var4			; a: FFFFFFF1
+movzx edx, [var2+6]		; b: 00002F00
+mov edx, [var4+12]		; c: 0000000C
+movsx edx, var1			; d: FFFFFFEC

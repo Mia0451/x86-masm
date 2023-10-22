@@ -1,0 +1,286 @@
+7.9.1 Short Answer
+
+
+1. In the following code sequence, show the value of AL after each shift or rotate instruction has executed:
+
+mov al,0D4h
+shr al,1 	; a. 6A (hexadecimal)
+mov al,0D4h
+sar al,1 	; b. EA (hexadecimal)
+mov al,0D4h
+sar al,4 	; c. FD (hexadecimal)
+mov al,0D4h
+rol al,1 	; d. A9 (hexadecimal)
+
+
+3. What will be the contents of AX and DX after the following operation?
+mov dx,0
+mov ax,222h
+mov cx,100h
+mul cx
+
+; AX is 2200 (hexadecimal), DX is 0002 (hexadecimal)
+
+
+5. What will be the contents of EAX and EDX after the following operation?
+mov eax,123400h
+mov edx,0
+mov ebx,10h
+div ebx
+
+; EAX is 00012340 (hexadecimal), EDX is 00000000 (hexadecimal)
+
+
+8. Describe the output when the following code executes in 64-bit mode:
+.data
+dividend_hi QWORD 00000108h
+dividend_lo QWORD 33300020h
+divisor QWORD 00000100h
+.code
+mov rdx,dividend_hi
+mov rax,dividend_lo
+div divisor
+
+
+; In 64-bit mode, the DIV instruction uses RDX:RAX as the dividend, and it permits 
+; the divisor to be a 64-bit register or memory operand. The quotient is stored 
+; in RAX, and the remainder in RDX. So above code is equivalent to
+; 0000 0000 0000 0108 0000 0000 3330 0020 / 0000 0000 0000 0100
+; (because QWORD and rdx, rax are 8 bytes)
+; So RAX is 0800 0000 0033 3000, and RDX is 20h
+
+; HOWEVER a divide overflow condition will occur (RAX 64bits could
+; not hold the quotient, missing 01 at the head, this will cause a processor 
+; exception and halts the current program
+
+
+9. The following program is supposed to subtract val2 from val1. Find and correct 
+all logic errors (CLC clears the Carry flag):
+
+; I tested following code in Visual Studio, works as expected
+; NOTE: I treat val1, val2 and result as valid hexadecimal number read
+; from left to right, i.e. most significant bit is at the left,
+; least significant bit is on the right
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+val1 QWORD 20403004362047A1h
+val2 QWORD 055210304A2630B2h
+result QWORD 0
+
+.code
+main PROC
+	mov ecx, 8			; loop counter
+	mov esi, offset val1 + 7	; set index to start, start from least sig bit
+	mov edi, offset val2 + 7
+	mov edx, offset result + 7	; result also saves to least sig bit first
+	clc ; clear Carry flag
+top:
+	mov al, BYTE PTR[esi]	; get first number
+	sbb al, BYTE PTR[edi]	; subtract second
+	mov BYTE PTR[edx], al	; store the result
+	dec esi
+	dec edi
+	dec edx
+	loop top
+
+	invoke 	ExitProcess,0
+main ENDP
+end main
+
+
+
+
+
+
+7.10 Programming Exercises
+
+
+
+1. Display ASCII Decimal
+
+; I tested in Visual Studio, works as expected.
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+DECIMAL_OFFSET = 5
+.data
+decimal_one BYTE "100123456789765"
+
+.code
+main PROC
+	mov edx, DECIMAL_OFFSET
+	mov ecx, LENGTHOF decimal_one
+	mov ebx, OFFSET decimal_one
+
+	call WriteScaled
+
+	invoke 	ExitProcess,0
+main ENDP
+
+; the number’s offset in EDX, 
+; the number length in ECX, and 
+; the decimal offset in EBX
+WriteScaled PROC
+	pushfd
+
+	sub ecx, edx	; the first part (left part)
+L1:
+	mov al, BYTE PTR [ebx]
+	call WriteChar
+	inc ebx
+	loop L1
+
+	mov al, '.'
+	call WriteChar
+
+	mov ecx, edx
+L2:	
+	mov al, BYTE PTR [ebx]
+	call WriteChar
+	inc ebx
+	loop L2
+
+	popfd
+	ret
+WriteScaled ENDP
+
+end main
+
+
+
+
+2. Extended Subtraction Procedure
+; I tested in Visual Studio, works as expected
+; NOTE: following op1 and op2, I treated the left as the
+; least signifcant bytes
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+op1 BYTE 34h,12h,98h,74h,06h,0A4h,0B2h,0A2h,34h,12h,98h,74h
+op2 BYTE 02h,45h,23h,00h,00h,87h, 10h, 80h, 02h,45h,23h,00h
+result BYTE 12 dup(0)
+
+.code
+main PROC
+	mov esi, OFFSET op1
+	mov edi, OFFSET op2
+	mov ebx, OFFSET result
+	mov ecx, 12
+
+	call Extended_Sub
+
+
+	invoke 	ExitProcess,0
+main ENDP
+
+; integer pointed by ESI - integer pointed by EDI,
+; EBX points to a variable that will hold the result,
+; and ECX indicates the number of bytes to do the subtraction.
+Extended_Sub PROC
+	pushfd
+
+	clc ; clear Carry flag
+top:
+	mov al, BYTE PTR[esi]	; get first least significant byte
+	sbb al, BYTE PTR[edi]	; subtract second
+	mov BYTE PTR[ebx], al	; store the result
+	inc esi
+	inc edi
+	inc ebx
+	loop top
+
+	popfd
+	ret
+Extended_Sub ENDP
+
+end main
+
+
+
+
+4. Encryption Using Rotate Operations
+; I tested using Visual Studio, works as expected
+; NOTE: I only use ROR is because ror with negative value
+; is equal to ROL with abs(negative value)
+
+INCLUDE Irvine32.inc		; For printing the final result
+
+.386
+.model flat,stdcall
+.stack 4096
+ExitProcess proto,dwExitCode:dword
+
+.data
+key BYTE -2, 4, 1, 0, -3, 5, 2, -4, -4, 6
+plainText BYTE "34567819283474635462643"
+plainText2 BYTE "12345678987654321"
+
+.code
+main PROC
+	mov esi, OFFSET plainText
+	mov ecx, LENGTHOF plainText
+	mov edi, OFFSET key
+
+	call Encrypt
+
+	mov esi, OFFSET plainText2
+	mov ecx, LENGTHOF plainText2
+	mov edi, OFFSET key
+
+	call Encrypt
+
+	invoke 	ExitProcess,0
+main ENDP
+
+; ESI stores the offset of the plaintext,
+; ECX stores the length of the plaintext (in bytes),
+; EDI stores the offset of the key (must be length of 10 bytes)
+Encrypt PROC
+	pushfd
+
+	mov eax, 0	
+L1:
+	push ecx
+
+	mov bh, [esi]
+	add edi, eax
+	mov cl, SBYTE PTR [edi]
+	ror bh, cl
+	sub edi, eax
+
+
+	mov [esi], bh			; write back
+	inc esi
+	inc eax
+
+	mov bl, 10			; get the reminder of eax/10, i.e. eax%10
+	div bl
+	mov al, ah			; reminder is in ah, copy back to al
+	mov ah, 0
+
+	pop ecx
+	loop L1
+
+	popfd
+	ret
+Encrypt ENDP
+
+end main
